@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+data/
+.env
+.git/
+.gitignore
+README.md
+docs/
+frontend/
+frontend_old/
+.venv/
+venv/
+tests/
