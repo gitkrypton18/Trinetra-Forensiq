@@ -7,9 +7,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend import detect
-from backend.parsers_bank import parse_bank_pdf, parse_bank_xlsx, parse_bank_txt, parse_bank_csv
-from backend.parsers_cdr import PARSERS as CDR_PARSERS
-from backend.parsers_ipdr import PARSERS as IPDR_PARSERS
+from backend.parsers.bank import parse_bank_pdf, parse_bank_xlsx, parse_bank_txt, parse_bank_csv
+from backend.parsers.cdr import PARSERS as CDR_PARSERS
+from backend.parsers.ipdr import PARSERS as IPDR_PARSERS
 
 SAMPLES = r"F:\SCRATCH\AI-BANK-TRANSACTIONS-TELECOM-ANALYZER\data\surat_police_samples"
 

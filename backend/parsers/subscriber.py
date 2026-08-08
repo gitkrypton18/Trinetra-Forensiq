@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import re
 
-from .. import parsers_cdr as _v2
+from . import cdr as _v2
 from ..errors import SkipFileError
 from ..util import clean_field, normalise_phone
 from .base import BaseParser, ParseResult
