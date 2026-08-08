@@ -16,6 +16,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend ./backend
+COPY investigative_copilot ./investigative_copilot
 COPY .env.example ./
 
 RUN useradd --create-home --uid 10001 appuser \
