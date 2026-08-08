@@ -24,6 +24,7 @@ from fastapi import (Depends, FastAPI, File, HTTPException, Query,
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 
 from . import auth, config, evidence, ml, risk, store
 from .behavioural import score_transactions
@@ -790,6 +791,15 @@ def search(q: str = Query("", max_length=128),
 # old shape so the UI works unchanged against this engine.
 
 
+def _process_upload(tmp_dir: str):
+    with _lock:
+        _state["bundle"] = ingest_folder(tmp_dir)
+        _persist()
+    copilot_router.reset_engine()
+    risk.clear_cache()
+    risk.clear_hybrid_cache()
+    _hybrid_warm(_state["bundle"])
+
 @app.post("/upload/parse-multi")
 async def upload_parse_multi(files: list[UploadFile] = File(...),
                              user: dict = Depends(auth.require_user)):
@@ -803,13 +813,8 @@ async def upload_parse_multi(files: list[UploadFile] = File(...),
             fh.write(await f.read())
         names.append(name)
     _log.info("uploading %d files -> %s", len(names), tmp)
-    with _lock:
-        _state["bundle"] = ingest_folder(tmp)
-        _persist()
-    copilot_router.reset_engine()
-    risk.clear_cache()
-    risk.clear_hybrid_cache()
-    _hybrid_warm(_state["bundle"])
+    
+    await run_in_threadpool(_process_upload, tmp)
     b = _state["bundle"]
     return {
         "detail": "fusion complete",

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import bisect
 import re
+import threading
 from collections import Counter, defaultdict
 
 BANK_TXN_WINDOW_SEC = 3600
@@ -213,8 +214,17 @@ def _is_round(amount: float) -> bool:
     return a >= 1000 and (a % 5000 == 0)
 
 
+_fraud_heat_cache = {}
+_fraud_heat_lock = threading.Lock()
+
+
 def fraud_heat(bundle: dict) -> dict:
     """Composite risk indicators for accounts, phones and UPI ids."""
+    bundle_id = id(bundle)
+    with _fraud_heat_lock:
+        if _fraud_heat_cache.get("id") == bundle_id:
+            return _fraud_heat_cache["data"]
+
     complaints = bundle.get("complaints", [])
     ncrp_accounts = {c.get("account_no") for c in complaints if c.get("account_no")}
     accounts = account_analysis(bundle.get("bank", []), complaints)
@@ -318,12 +328,17 @@ def fraud_heat(bundle: dict) -> dict:
     ]
     round_payouts.sort(key=lambda x: x.get("amount") or 0, reverse=True)
 
-    return {
+    heat = {
         "accounts": account_flags,
         "phones": phone_flags,
         "round_payouts": round_payouts[:200],
         "cdr_targets": dict(cdr_targets),
     }
+    with _fraud_heat_lock:
+        _fraud_heat_cache.clear()
+        _fraud_heat_cache["id"] = bundle_id
+        _fraud_heat_cache["data"] = heat
+    return heat
 
 
 def rapid_payouts(bundle: dict, threshold: int = 5, window_min: int = 60) -> list[dict]:
