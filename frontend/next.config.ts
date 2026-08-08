@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // output: "standalone", // <-- Uncomment this ONLY if deploying via Docker Compose
   reactStrictMode: true,
   async rewrites() {
     return [
